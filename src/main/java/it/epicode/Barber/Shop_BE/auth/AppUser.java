@@ -1,5 +1,6 @@
 package it.epicode.Barber.Shop_BE.auth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -35,6 +36,7 @@ public class AppUser {
 
     private String nomeSalone;
 
+    @JsonProperty("isBarber")
     private boolean isBarber;
 
     private Integer rangeAppuntamento;

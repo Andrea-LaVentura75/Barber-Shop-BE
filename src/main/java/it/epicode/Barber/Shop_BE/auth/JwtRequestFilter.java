@@ -41,29 +41,42 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String username = null;
         String jwtToken = null;
 
+        // Controlla se l'intestazione è presente e corretta
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring(7);
             try {
                 username = jwtTokenUtil.getUsernameFromToken(jwtToken);
+                System.out.println("Username estratto dal token: " + username);
             } catch (IllegalArgumentException e) {
-                System.out.println("Impossibile ottenere il token JWT");
+                System.out.println("Errore: Impossibile ottenere il token JWT");
             } catch (ExpiredJwtException e) {
-                System.out.println("Il token JWT è scaduto");
+                System.out.println("Errore: Il token JWT è scaduto");
             }
+        } else {
+            System.out.println("L'intestazione Authorization non è presente o non inizia con 'Bearer '");
         }
 
+        // Verifica l'utente autenticato
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.customUserDetailsService.loadUserByUsername(username);
 
+            // Valida il token JWT
             if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                System.out.println("Token JWT valido. Utente autenticato: " + username);
+            } else {
+                System.out.println("Errore: Token JWT non valido per l'utente " + username);
             }
+        } else if (username == null) {
+            System.out.println("Errore: Impossibile autenticare l'utente. Username null.");
         }
+
         chain.doFilter(request, response);
     }
+
 
 
 }

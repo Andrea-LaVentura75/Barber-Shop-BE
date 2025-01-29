@@ -41,6 +41,7 @@ public class AppUserService {
         // Controllo se l'username è già in uso
         if (appUserRepository.existsByUsername(registerRequest.getUsername())) {
             throw new EntityExistsException("Username già in uso");
+       //
         }
 
         // Crea un nuovo oggetto AppUser

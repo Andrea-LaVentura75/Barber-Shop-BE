@@ -13,11 +13,12 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // Consente tutte le richieste su tutti gli endpoint
-                        .allowedOrigins("*") // Consente richieste da qualsiasi origine
+                        .allowedOrigins("http://localhost:4200") // Specifica l'origine del frontend
                         .allowedMethods("*") // Consente tutti i metodi (GET, POST, PUT, DELETE, PATCH, OPTIONS)
                         .allowedHeaders("*") // Consente tutti gli header
-                        .allowCredentials(false); // Consente l'invio di credenziali, mettere false se allowedOrigins è "*"
+                        .allowCredentials(true); // Consente l'invio di credenziali
             }
         };
     }
 }
+
