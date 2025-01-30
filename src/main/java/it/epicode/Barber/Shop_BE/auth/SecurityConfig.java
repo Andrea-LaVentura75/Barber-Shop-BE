@@ -42,8 +42,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Disabilita CSRF
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Abilita CORS
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // Rotte pubbliche
-                        .anyRequest().authenticated() // Tutte le altre richiedono autenticazione
+                        .requestMatchers("/api/auth/login", "/api/auth/register", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/barbiere/cerca").hasAnyRole("CLIENT", "BARBER") // Consenti accesso a clienti e barbieri
+                        .anyRequest().authenticated()
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)

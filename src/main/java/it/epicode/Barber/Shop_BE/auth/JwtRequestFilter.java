@@ -58,6 +58,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // Verifica l'utente autenticato
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            System.out.println("Tentativo di autenticazione per l'utente: " + username);
+
             UserDetails userDetails = this.customUserDetailsService.loadUserByUsername(username);
 
             // Valida il token JWT
@@ -75,8 +77,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         chain.doFilter(request, response);
+
+        // Log finale per confermare il completamento del filtro
+        System.out.println("Filtro JWT completato per URI: " + requestURI);
     }
-
-
-
 }

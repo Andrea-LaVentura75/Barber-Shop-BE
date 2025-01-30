@@ -1,8 +1,11 @@
 package it.epicode.Barber.Shop_BE.controller;
 
+import it.epicode.Barber.Shop_BE.auth.AppUser;
+import it.epicode.Barber.Shop_BE.auth.AppUserRepository;
 import it.epicode.Barber.Shop_BE.slotDisponibile.SlotDisponibile;
 import it.epicode.Barber.Shop_BE.slotDisponibile.SlotDisponibileDTO;
 import it.epicode.Barber.Shop_BE.slotDisponibile.SlotDisponibileService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,6 +19,7 @@ import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -24,6 +28,8 @@ import java.util.Map;
 public class BarbiereController {
 
     private final SlotDisponibileService slotDisponibileService;
+
+    private final AppUserRepository appUserRepository;
 
     // Endpoint per creare slot disponibili
     @PostMapping("/slot")
@@ -112,6 +118,50 @@ public class BarbiereController {
         slotDisponibileService.eliminaVecchiSlot(barbiereId, dataOraCorrente);
         return ResponseEntity.ok("Vecchi slot eliminati con successo");
     }
+
+    @GetMapping("/cerca")
+    public ResponseEntity<List<BarbiereDTO>> cercaBarbieri(@RequestParam String nomeSalone) {
+        // Log iniziale per la chiamata
+        System.out.println("Metodo cercaBarbieri chiamato.");
+        System.out.println("Parametro nomeSalone ricevuto: " + nomeSalone);
+
+        // Trova i barbieri il cui salone contiene il nome cercato (ignorando maiuscole/minuscole)
+        List<AppUser> barbieri = appUserRepository.findByNomeSaloneContainingIgnoreCase(nomeSalone);
+        System.out.println("Barbieri trovati nel repository: " + barbieri.size());
+
+        // Filtra solo i barbieri e converte in DTO
+        List<BarbiereDTO> risultati = barbieri.stream()
+                .filter(AppUser::isBarber) // Assicurati che siano barbieri
+                .map(barbiere -> {
+                    System.out.println("Barbiere trovato: " + barbiere.getNome() + " " + barbiere.getCognome());
+                    return new BarbiereDTO(
+                            barbiere.getId(),
+                            barbiere.getNome(),
+                            barbiere.getCognome(),
+                            barbiere.getNomeSalone(),
+                            barbiere.getAvatar()
+                    );
+                })
+                .collect(Collectors.toList());
+
+        System.out.println("Numero di risultati finali: " + risultati.size());
+        return ResponseEntity.ok(risultati);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BarbiereDTO> getBarbiere(@PathVariable Long id) {
+        System.out.println("Richiesta ricevuta per barbiere ID: " + id);
+        AppUser barbiere = appUserRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Barbiere non trovato"));
+        if (!barbiere.isBarber()) {
+            throw new SecurityException("Non è un barbiere");
+        }
+
+        BarbiereDTO dto = new BarbiereDTO(barbiere.getId(), barbiere.getNome(), barbiere.getCognome(),
+                barbiere.getNomeSalone(), barbiere.getAvatar());
+        return ResponseEntity.ok(dto);
+    }
+
 
 
 }
