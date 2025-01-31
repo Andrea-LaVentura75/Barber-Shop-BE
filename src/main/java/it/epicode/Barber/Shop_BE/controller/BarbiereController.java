@@ -163,6 +163,16 @@ public class BarbiereController {
     }
 
 
+    @GetMapping("/{barbiereId}/slot-disponibili")
+    public ResponseEntity<List<SlotDisponibileDTO>> trovaSlotDisponibiliPerGiorno(
+            @PathVariable Long barbiereId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate giorno) {
+
+        List<SlotDisponibileDTO> slotDisponibili = slotDisponibileService.trovaSlotDisponibiliPerGiorno(barbiereId, giorno);
+        return ResponseEntity.ok(slotDisponibili);
+    }
+
+
 
 }
 

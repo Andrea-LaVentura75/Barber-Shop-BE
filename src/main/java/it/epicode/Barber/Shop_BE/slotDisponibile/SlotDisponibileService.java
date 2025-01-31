@@ -102,6 +102,12 @@ public class SlotDisponibileService {
 
 
 
+    public List<SlotDisponibileDTO> trovaSlotDisponibiliPerGiorno(Long barbiereId, LocalDate giorno) {
+        return slotDisponibileRepository.findSlotDisponibiliByGiorno(barbiereId, giorno).stream()
+                .map(slot -> new SlotDisponibileDTO(slot.getId(), slot.getDataOra(), slot.isPrenotato()))
+                .collect(Collectors.toList());
+    }
+
 
 
 

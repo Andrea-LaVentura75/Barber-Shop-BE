@@ -10,7 +10,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SlotDisponibileDTO {
+    private Long id;
     private LocalDateTime dataOra;
     private boolean prenotato;
 }
+
 

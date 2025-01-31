@@ -2,7 +2,12 @@ package it.epicode.Barber.Shop_BE.appuntamento;
 
 import it.epicode.Barber.Shop_BE.auth.AppUser;
 import it.epicode.Barber.Shop_BE.auth.AppUserRepository;
+import it.epicode.Barber.Shop_BE.servizio.Servizio;
+import it.epicode.Barber.Shop_BE.servizio.ServizioRepository;
+import it.epicode.Barber.Shop_BE.slotDisponibile.SlotDisponibile;
+import it.epicode.Barber.Shop_BE.slotDisponibile.SlotDisponibileRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +22,10 @@ public class AppuntamentoService {
     private final AppuntamentoRepository appuntamentoRepository;
 
     private final AppUserRepository appUserRepository;
+
+    private final SlotDisponibileRepository slotDisponibileRepository;
+
+    private final ServizioRepository servizioRepository;
 
     // Salva un nuovo appuntamento dopo aver verificato che non ci siano sovrapposizioni
     public Appuntamento creaAppuntamento(Appuntamento appuntamento, String usernameAutenticato) {
@@ -44,6 +53,14 @@ public class AppuntamentoService {
         if (esisteSovrapposizione) {
             throw new IllegalArgumentException("Il barbiere ha già un appuntamento in questa data e ora.");
         }
+
+        // Aggiorna lo stato dello slot come prenotato
+        SlotDisponibile slot = slotDisponibileRepository.findByBarbiereIdAndDataOra(
+                barbiere.getId(), appuntamento.getDataOra()
+        ).orElseThrow(() -> new EntityNotFoundException("Slot non trovato per la data e ora selezionata."));
+
+        slot.setPrenotato(true);
+        slotDisponibileRepository.save(slot);
 
         // Salva l'appuntamento
         return appuntamentoRepository.save(appuntamento);
@@ -133,6 +150,37 @@ public class AppuntamentoService {
                 .orElseThrow(() -> new EntityNotFoundException("Appuntamento non trovato con ID: " + id));
     }
 
+    @Transactional
+    public Appuntamento prenotaAppuntamento(Long slotId, Long servizioId, String nota, String usernameCliente) {
+        // Recupera il cliente autenticato
+        AppUser cliente = appUserRepository.findByUsername(usernameCliente)
+                .orElseThrow(() -> new EntityNotFoundException("Cliente non trovato"));
+
+        // Recupera lo slot e verifica che sia disponibile
+        SlotDisponibile slot = slotDisponibileRepository.findById(slotId)
+                .orElseThrow(() -> new EntityNotFoundException("Slot non trovato"));
+        if (slot.isPrenotato()) {
+            throw new IllegalArgumentException("Questo slot è già prenotato.");
+        }
+
+        // Recupera il servizio scelto
+        Servizio servizio = servizioRepository.findById(servizioId)
+                .orElseThrow(() -> new EntityNotFoundException("Servizio non trovato"));
+
+        // Imposta lo slot come prenotato
+        slot.setPrenotato(true);
+        slotDisponibileRepository.save(slot);
+
+        // Crea il nuovo appuntamento
+        Appuntamento appuntamento = new Appuntamento();
+        appuntamento.setCliente(cliente);
+        appuntamento.setBarbiere(slot.getBarbiere());
+        appuntamento.setDataOra(slot.getDataOra());
+        appuntamento.setNota(nota);
+        appuntamento.setServizio(servizio);
+
+        return appuntamentoRepository.save(appuntamento);
+    }
 
 
 }

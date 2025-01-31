@@ -116,6 +116,26 @@ public class AppuntamentoController {
         return ResponseEntity.ok(appuntamenti);
     }
 
+    @PostMapping("/prenota")
+    public ResponseEntity<AppuntamentoDTO> prenotaAppuntamento(
+            @RequestParam Long slotId,
+            @RequestParam Long servizioId,
+            @RequestParam(required = false) String nota,
+            Principal principal) {
+
+        Appuntamento appuntamento = appuntamentoService.prenotaAppuntamento(slotId, servizioId, nota, principal.getName());
+        AppuntamentoDTO appuntamentoDTO = new AppuntamentoDTO(
+                appuntamento.getId(),
+                appuntamento.getCliente().getNome(),
+                appuntamento.getBarbiere().getNome(),
+                appuntamento.getDataOra(),
+                nota,
+                appuntamento.getServizio().getNome(),
+                appuntamento.getServizio().getPrezzo()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(appuntamentoDTO);
+    }
 
 
 
